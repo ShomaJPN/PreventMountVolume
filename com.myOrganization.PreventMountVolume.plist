@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.myOrganization.PreventMountVolume</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>/Path/To/Script/PreventMountVolume.sh</string>
+    </array>
+    <key>StartOnMount</key>
+    <true/>
+    <key>StandardOutPath</key>
+    <string>/Path/To/log/cmd.log</string>
+    <key>StandardErrorPath</key>
+    <string>/Path/To/log/cmd-err.log</string>
+</dict>
+</plist>
+
