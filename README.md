@@ -2,7 +2,7 @@
 
 ## Overview
 This Bash ShellScripts help to prevent (or control) mounting of external volumes.  
-According to the organization's policy, this script could be designed to prevent certain external disk connections, e.g. USB thumb drive.
+According to the organization's policy, this script can be designed to prevent certain external disk connections, e.g. USB thumb drive.
 
 ## Description
 Simple implementaion because it uses launchd's StartOnMount trigger.
