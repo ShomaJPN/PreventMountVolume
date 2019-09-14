@@ -23,9 +23,9 @@ Excute ShellScripts with launchctl / launchd.
 Put ShellScripts to the appropriate directory  `(ex.~/Script)`  , and set execute permissions.  
 Make or change launchd's command plist file according to your environment , then put it to the appropriate directory. `(ex.~/Library/LaunchAgents)`  
 
-At the first run, confirmation dialog is (xxx would like to control "System Events"...) appeared.
+At the first run, confirmation dialog (xxx would like to control "System Events"...) is appeared.
 Please allow it (in the case of Mojave )  
-If you did not allow by mistake, try `$ tccutil reset AppleEvents`  
+If you did not allow it by mistake, try `$ tccutil reset AppleEvents`  
 
 
 Start with the following command (only the first time)  
