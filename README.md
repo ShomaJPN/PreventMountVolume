@@ -1,11 +1,12 @@
 # PreventMountVolume (macOS)
 
 ## Overview
-This Bash ShellScripts help to prevent (or control) mounting of external volumes.  
-According to the organization's policy, this script can be designed to prevent certain external disk connections, e.g. USB thumb drive.
+This Bash ShellScripts prevent (or control) mounting of external volumes.  
+According to the organization's policy, this script prevent (or control) certain external disk connections, e.g. USB thumb drive.
 
 ## Description
-Simple implementaion because it uses launchd's StartOnMount trigger.
+Simple implementaion using launchd's StartOnMount trigger.(Not use fstab(5))
+The volume can be specified by Protocol(USB, Thunderbolt, PCI-Express, SATA..), UUID, VolumeName, and conbination thereof.
 
 ## Requirements
 - Bash (for ShellScript)
@@ -16,17 +17,19 @@ Simple implementaion because it uses launchd's StartOnMount trigger.
 ## Usage
 Excute ShellScripts with launchctl / launchd.
 - PreventMountVolume.sh
-- com.myOrganization.PreventMountVolume.plist    <-- Sample /launchd's command plist file
-
+- com.myOrganization.PreventMountVolume.plist    <-- Sample /launchd's command-plist file
+- ShowVolumeParameter.sh   <-- Show specific volume parameters in variable-entry form (auxiliary)
 
 ## Install and Run
-Put ShellScripts to the appropriate directory  `(ex.~/Script)`  , and set execute permissions.  
-Make or change launchd's command plist file, then put it to the appropriate directory. `(ex.~/Library/LaunchAgents)`  
+Write White-list volume parameter in the PreventMountVolume.sh (WhiteListVolumes area)  
+These parameters could be found with diskutil (8), and also ShowVolumeParameter.sh can help it.  
+Put ShellScripts to the appropriate directory  `(ex.~/Script)`  , and set executable permissions.  
+
+Make launchd's command-plist file to suit for your enviroment, then put it to the appropriate directory. `(ex.~/Library/LaunchAgents)`  
 
 At the first run, confirmation dialog (xxx would like to control "System Events"...) is appeared.  
 Please allow it (in the case of Mojave )  
 If you did not allow it by mistake, try `$ tccutil reset AppleEvents`  
-
 
 Start with the following command (only the first time)  
 　```launchctl load /Path/to/plist```  
