@@ -6,7 +6,7 @@ According to the organization's policy, this script prevent (or control) certain
 
 ## Description
 Simple implementaion using launchd's StartOnMount trigger.(Not use fstab(5))  
-The volume can be specified by Protocol(USB, Thunderbolt, PCI-Express, SATA..), UUID, VolumeName, and conbination thereof.
+The volume can be specified by Protocol(USB, Thunderbolt, PCI-Express, SATA..), UUID(Volume, Partition), VolumeName, and conbination thereof.
 
 ## Requirements
 - Bash (for ShellScript)
@@ -21,7 +21,7 @@ Excute ShellScripts with launchctl / launchd.
 - ShowVolumeParameter.sh   <-- Show specific volume parameters in variable-entry form (auxiliary)
 
 ## Install and Run
-Write White-list volume parameter in the PreventMountVolume.sh (WhiteListVolumes area)  
+Write the White-list volume parameter in the PreventMountVolume.sh (WhiteListVolumes area)  
 These parameters could be found with diskutil (8), and also ShowVolumeParameter.sh can help it.  
 Put ShellScripts to the appropriate directory  `(ex.~/Script)`  , and set executable permissions.  
 
