@@ -1,12 +1,12 @@
 # PreventMountVolume (macOS)
 
 ## Overview
-This Bash ShellScripts prevent (or control) mounting of external volumes.  
+This Bash ShellScript prevent (or control) mounting of external volumes.  
 According to the organization's policy, this script prevent (or control) certain external disk connections, e.g. USB thumb drive.
 
 ## Description
 Simple implementaion using launchd's StartOnMount trigger.(Not use fstab(5))  
-The volume can be specified by Protocol(USB, Thunderbolt, PCI-Express, SATA..), UUID(Volume, Partition), VolumeName, and conbination thereof.
+The white volumes can be specified by Protocol(USB, Thunderbolt, PCI-Express, SATA..), UUID(Volume, Partition), VolumeName, and conbination thereof.
 
 ## Requirements
 - Bash (for ShellScript)
@@ -16,13 +16,13 @@ The volume can be specified by Protocol(USB, Thunderbolt, PCI-Express, SATA..), 
 
 ## Usage
 Excute ShellScripts with launchctl / launchd.
-- PreventMountVolume.sh
+- PreventMountVolume.sh   <-- Main ShellScript
 - com.myOrganization.PreventMountVolume.plist    <-- Sample /launchd's command-plist file
-- ShowVolumeParameter.sh   <-- Show specific volume parameters in variable-entry form (auxiliary)
+- ShowVolumeParameter.sh   <-- Helper / Display volume parameter in specific format
 
 ## Install and Run
-Write the White-list volume parameter in the PreventMountVolume.sh (WhiteListVolumes area)  
-These parameters could be found with diskutil (8), and also ShowVolumeParameter.sh can help it.  
+Add the White-list volume parameter in the PreventMountVolume.sh (WhiteListVolumes area)  
+These parameters could be shown by diskutil (8), and also ShowVolumeParameter.sh can help it.  
 Put ShellScripts to the appropriate directory  `(ex.~/Script)`  , and set executable permissions.  
 
 Make launchd's command-plist file to suit for your enviroment, then put it to the appropriate directory. `(ex.~/Library/LaunchAgents)`  
