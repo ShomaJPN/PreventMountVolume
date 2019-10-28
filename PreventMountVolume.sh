@@ -388,8 +388,8 @@ $WhiteListVolumeParameter
 EOD
 
   # if Volume-name/data is not in $WhiteListVolumeParameter, Eject Volume
-    [ "$myDeterminant" = "0" ] &&
-    diskutil unmount force $myVolume
+    [ "$myDeterminant" = "0" ]              &&
+    diskutil unmount force $myVolume        &&
     SendToLog "$myVolumeName is Unmounted!"
 done
 
