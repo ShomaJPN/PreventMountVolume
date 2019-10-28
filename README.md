@@ -29,6 +29,8 @@ These parameters could be shown by diskutil (8), and also "ShowVolumeParameter.s
 Put ShellScripts to the appropriate directory  `(ex.~/Script)`  , and set executable permissions.  
 Make launchd's command-plist file to suit for your enviroment, then put it to the appropriate directory. `(ex.~/Library/LaunchAgents)`  
 
+![tcc-e](https://user-images.githubusercontent.com/49780970/67718026-42e26780-fa12-11e9-81f2-3ef96dba789a.jpg) 
+
 At the first run, confirmation dialog (xxx would like to control "System Events"...) is appeared.  
 Please allow it (in the case of Mojave )  
 If you did not allow it by mistake, try `$ tccutil reset AppleEvents`  
