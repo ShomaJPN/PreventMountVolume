@@ -129,11 +129,11 @@ WhiteListVolumes="
 UNTITLED
 MS-DOS FAT32,USB,3EA622AA-C788-3C5E-9EBB-A9A1AF2A4B28,*
 
-LGT_USB_8GB_HFS
-Journaled HFS+,USB,CDDD66E9-36F5-309F-AAF0-9FACBD1A01B0,2EE2E792-8F14-48F4-B307-8C284415B8F5
-
 LGT_USB_16G2_APFS
 APFS,USB,47F2EB48-8878-4B6B-BEC4-7436610B5A30,47F2EB48-8878-4B6B-BEC4-7436610B5A30
+
+LGT_USB_8GB_HFS
+Journaled HFS+,USB,CDDD66E9-36F5-309F-AAF0-9FACBD1A01B0,2EE2E792-8F14-48F4-B307-8C284415B8F5
 "
 
 
@@ -273,7 +273,7 @@ done <<EOD
 $WhiteListVolumes
 EOD
 
-IFS=$IFS_old
+IFS="$IFS_old"
 
 # Delete last blank-line
 WhiteListVolumeParameter="$( echo "$WhiteListVolumeParameter" |grep -v ^$ )"
@@ -333,8 +333,8 @@ myVolumeData=$myVolumeData",*"
 
 function MakeMyWhiteVolumeNameAndData()
 {
-    myWhiteVolumeName=$( echo "$myWhiteListVolumeParameter" | cut -d$'\001' -f1 )
-    myWhiteVolumeData=$( echo "$myWhiteListVolumeParameter" | cut -d$'\001' -f2 )
+    myWhiteVolumeName=$( echo $myWhiteListVolumeParameter | cut -d$'\001' -f1 )
+    myWhiteVolumeData=$( echo $myWhiteListVolumeParameter | cut -d$'\001' -f2 )
     myGrepWhiteVolumeData=$( echo "$myWhiteVolumeData" | sed 's/*/.*/g' )
 }
 
