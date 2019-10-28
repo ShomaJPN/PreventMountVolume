@@ -384,7 +384,7 @@ for myVolume in $ListOfOuterVolumes ;do
     myDeterminant="1" && break                                                  # Change Determinant
     
   done <<-EOD
-    $WhiteListVolumeParameter
+$WhiteListVolumeParameter
 EOD
 
   # if eject-determinat is "0", Eject this volume
