@@ -136,6 +136,15 @@ LGT_USB_8GB_HFS
 Journaled HFS+,USB,CDDD66E9-36F5-309F-AAF0-9FACBD1A01B0,2EE2E792-8F14-48F4-B307-8C284415B8F5
 "
 
+Mes="
+IT support team
+
+%myVolumeName was ejected, due to the organizational policy.
+
+If you are unsure, contact the IT support team (tel.xxx-xxxx-xxxx)
+
+"
+
 
 ############################# End of Variables #################################
 
@@ -391,9 +400,14 @@ $WhiteListVolumeParameter
 EOD
 
   # if this volume's eject-determinat is "0", Eject volume
-    [ "$myDeterminant" = "0" ]              &&
-    diskutil unmount force $myVolume        &&
-    SendToLog "$myVolumeName is Unmounted!"
+    [ "$myDeterminant" = "0" ]                             &&
+    diskutil unmount force $myVolume                       &&
+    SendToLog "$myVolumeName($myVolumeData) is Unmounted!" &&
+    Mes=$(echo "$Mes" | sed "s/%myVolumeName/- $myVolumeName -/")    &&
+    osascript <<-EOD &>/dev/null
+    tell application "System Events" to display dialog "$Mes" buttons {"OK"} with title "Caution" with icon 2 giving up after 10
+EOD
+
 done
 
 IFS=$IFS_bak
