@@ -57,7 +57,7 @@
 
 ######################## Set "Log" file and function ###########################
 
-LogPath=$HOME/log
+LogPath="$HOME/log"
 LogFile="$LogPath/PreventMountVolume.log"
 
 if [ ! -d "$LogPath" ]; then
@@ -385,7 +385,7 @@ myCount=1
 
 for myCount in {1..10};do
 
-  SendToLog `echo $myCount` "/10"
+  SendToLog $( echo $myCount ) "/10"
 
   # Check and make White-list Volume Parameter
   MakeWhiteListVolumeParameter    # $WhiteListVolumes -> $WhiteListVolumeParameter
