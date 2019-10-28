@@ -1,42 +1,53 @@
 #!/bin/bash
 ##
-## ---This Ver is test-drive---
+## ---This is test-drive version---
 ##
 ## Name:
 ##  PreventMountVolume.sh
-##  Created by SHOMA on 9/13/2019. Last edited by SHOMA 9/13/2019
+##  Created by SHOMA on 9/13/2019. Last edited by SHOMA 10/15/2019
 ##
-## Overview:
-##  Prevent (control) mounting of external volumes, e.g. USB-thumb-drive.
+## Overview
+##  Prevent (or control) mounting of external volumes, e.g. USB thumb drive.
+##  White-volumes to mount are specified by Protocol(USB,Thunderbolt, PCI-Express,
+##  SATA..),UUID, VolumeName, and conbination thereof.
 ##
-## Discription:
-##  This script is created to mount only allowed external volumes.
-##  Simple imprementation because it uses launchd's StartOnMount trigger.
+## Description
+##  Simple implementaion using launchd's StartOnMount trigger.(Not use fstab(5))
+##  Do not specifying only the VolumeName ,because it is not perfect in this ver.
 ##
 ## Requirements:
 ##  -macOS
+##  - Bash (for ShellScript)
+##   - osascript (for FinderDialog)
 ##  -Test under macOS 10.14.6
 ##
 ## Install and Run:
-##  - Copy this script to the appropriate directory (ex.~/Script)
-##    and set it Excutable.
+##  - Prepare to use PreventMountVolume.sh
+##   - Create WhiteVolumeList parameter and add it to this script (variable-area)
+##   - Put this script to the appropriate directory (ex.~/Script) and set Excutable
+##
 ##  - Use with launchd/lauchctl
 ##   - Make commnad-plist file and put it ~/Library/LaunchAgents/
-##    - Start with the following command (only the first time)
-##       launchctl load /Path/to/plist
+##    - Start is ... following command (only the first time)
+##       launchctl load ~/Library/LaunchAgents/some.plist
 ##  　- Stop is ...
-##       launchctl unload /Path/to/plist
+##       launchctl unload ~/Library/LaunchAgents/some.plist
 ##    - Stop forever...
-##       Remove plist from ~/Library/LaunchAgents/ (e.g. rm command)
+##       Remove plist (e.g. rm command)
 ##    - Check is ...
-##       　launchctl list
+##       launchctl list
+##
 ##  - A confirmation dialog (xxx would like to control "System Events"...)
 ##    appear at the first run, then allow it.  
 ##
 ## References:
-##  If you did not confirm by mistake, try "$ tccutil reset AppleEvents"
-##  If you want to apply to all users, put commnad-plist /Library/LaunchAgents/
+##  If you did not confirm it by mistake, try "$ tccutil reset AppleEvents"
+##  If you want to apply all users, please consider to put commnad-plist into
+##  /Library/LaunchAgents/
 ##
+##
+## Should be implemented in the future:
+##   -VolumeName Exact-match func. 
 ##
 ## Author: SHOMA Shimahara <shoma@yk.rim.or.jp>
 ##
@@ -44,7 +55,7 @@
 
 
 
-
+#123456789#123456789#123456789#123456789#123456789#123456789#123456789#123456789
 ######################## Set "Log" file and function ###########################
 
 LogPath=$HOME/log
@@ -66,51 +77,322 @@ echo $(date +"%Y-%m-%d %T") : $@ | tee -a "$LogFile"
 ##################### End of set "Log" file and function #######################
 
 
-WhiteList_Vol_UUID=""
-WhiteList_Vol="disk5" #VolumeIdentifer
-
-Startup_Vol=$(df / |grep ^/dev |cut -d' ' -f1)
-Startup_Disk=$(echo $Startup_Vol |sed 's/s[0-9]*$//g')
-
-echo "Startup Vol and Disk"
-echo $Startup_Vol
-echo $Startup_Disk
 
 
-#List_of_Outer_Vol=$(df |grep ^/dev |cut -d' ' -f1)
-List_of_Outer_Vol=$(df |grep ^/dev |cut -d' ' -f1 |grep -v "$Startup_Disk"s)
 
-echo "---"
-echo "List of Outer vol"
-echo "$List_of_Outer_Vol"
+############################### Set Variables ##################################
+#
+# Name:
+#   WhiteListVolumes
+#
+# Discription:
+#   The list of Volumes's Parameters that are allowed to be mounted.
+#
+# Usage:
+#
+#   - Format -
+#
+#     VolName1
+#     FileSystem,Protcol,UUID(Volume),UUID(Partition)
+#
+#     VolName2
+#     FileSystem,Protcol,UUID(Volume),UUID(Partition)
+#     ...
+#     ...
+#
+#
+#   These are given by "$diskutil info diskXsX" ,and "ShowVolumeParameter.sh" could
+#   help it
+#   Also you can use wildcards(*).
+#
+# Reference:
+#
+#   -FileSystem ($ diskutil listFilesystems)
+#     APFS,Journaled HFS+,MS-DOS FAT16,MS-DOS FAT32 ...
+#
+#   -Protcol
+#     PCI-Express,USB,ATA,FireWire,Thunderbolt ...
+#
+#   -UUID(Volume)
+#     $ diskutil info diskXsX |sed -n '/Volume UUID/{;s/^.*Volume UUID:[ ]*//p;}'
+#
+#   -UUID(Partition)
+#     $ diskutil info diskXsX |sed -n '/Partition UUID/{;s/^.*Partition UUID:[ ]*//p;}'
+#
+#   Remark!
+#     In the case of no "Partition UUID" (..possibly MS-Windows disk), write "*" 
+#     in that section 
+#
+#
 
-echo "---"
-echo "wo WhiteList"
-echo "$List_of_Outer_Vol" |grep -v "$WhiteList_Vol"
 
-List_of_Outer_Vol_WO_WLV=$(echo "$List_of_Outer_Vol" |grep -v "$WhiteList_Vol")
+WhiteListVolumes="
+UNTITLED
+MS-DOS FAT32,USB,3EA622AA-C788-3C5E-9EBB-A9A1AF2A4B28,*
 
-# for i in $List_of_Outer_Vol_WO_WLV
-#     do
-#         [[ $(diskutil info $i |grep Protocol |egrep "USB|FireWire|Thunderbolt") ]] &&
-#         diskutil unmount $i
-#         echo "Result is: " $?
-#     done
+LGT_USB_8GB_HFS
+Journaled HFS+,USB,CDDD66E9-36F5-309F-AAF0-9FACBD1A01B0,2EE2E792-8F14-48F4-B307-8C284415B8F5
 
-for i in $List_of_Outer_Vol_WO_WLV
-do
-    [ "$(diskutil info $i |grep Protocol |egrep "USB|FireWire|Thunderbolt")" ] &&
-    diskutil unmount $i
-    SendToLog "$i is unmounted"
-    echo "Result is: " $?
+LGT_USB_16G2_APFS
+APFS,USB,47F2EB48-8878-4B6B-BEC4-7436610B5A30,47F2EB48-8878-4B6B-BEC4-7436610B5A30
+"
+
+
+############################# End of Variables #################################
+
+
+
+
+
+############################## Set Functions ###################################
+#
+# Name:
+#  1.function MakeWhiteListVolumeParameter()
+#  2.function GetOuterVolumeList()
+#  3.function GetMyVolumeNameAndData()
+#  4.function MakeWhiteListNameAndData()
+#
+# Details:
+#  1.function MakeWhiteListVolumeParameter()
+#
+#    Discription:
+#      Simple Check $WhiteListVolumes and Create $WhiteListVolumeParameter
+#        -Simple Check
+#           -Delete blank-lines
+#           -Check Parity of Number of lines (Even:OK/Odd:exit) 
+#           -Check Number of parameters in data-part (4:OK/others:exit))
+#
+#        -Create $WhiteListVolumeParameter
+#         Join Name<>Data-part in $WhiteListVolumes and change word-separator
+#         "," to "\001"
+#         This is for the case that Volume-name contains "space","comma" etc..
+#
+#    Requirements:
+#      $WhiteListVolumes (is given in correct format)
+#
+#    Output:
+#      $WhiteListVolumeParameter
+#      
+#
+#
+#  2.function GetOuterVolumeList()
+#
+#    Discription:
+#      Get StartUpVolume,Disk and OuterVolumesList
+#
+#    Requirements:
+#      NA
+#
+#    Output:
+#      $StartupVolume, $StartupDisk, $ListOfOuterVolumes
+#
+#
+#
+#  3.function GetMyVolumeNameAndData()
+#
+#    Discription:
+#      Get Volume-name and Volume-data from $myVolume
+#
+#    Requirements:
+#      $myVolume (ex. /dev/diskXsX)
+#
+#    Output:
+#      $myVolumeName,$myVolumeData
+#
+#      example: $myVolumeData -> APFS,USB,UUID(Volume),UUID(Partition)
+#      
+#
+#
+#  4.function MakeMyWhiteVolumeNameAndData()
+#
+#    Discription:
+#      -Get $myWhiteVolumeName,$myWhiteVolumeData from $myWhiteListVolumeParameter
+#      -Create $GrepWhiteVolumeData (for grep-match)
+#
+#    Requirements:
+#      $myWhiteListVolumeParameter (is given in correct format)
+#
+#    Output:
+#      $myWhiteVolumeName,$myWhiteVolumeData,$myGrepWhiteVolumeData
+#
+#
+
+
+# ------------------------------------------------------------------------------
+#  1.function MakeWhiteListVolumeParameter()
+#
+#
+
+function MakeWhiteListVolumeParameter ()
+{
+WhiteListVolumes="$( echo "$WhiteListVolumes" |grep -v ^$ )"
+
+# Simple Check -> $WhiteListVolumes
+# 1/2.Check the parity of the number of lines
+[ $(( $(echo "$WhiteListVolumes" |wc -l) % 2 )) -eq "1" ] && 
+echo "Number of WhiteListVolumes's Line is Odd" &&
+exit 0
+
+# 2/2.Check the number of parameters (in data-part)
+j="1"
+while read i ;do
+  if [ $(( j % 2)) -eq 0 ] ; then          # choose data-part
+    [ $(echo "$i" | grep -o ',' |wc -l) -ne "3" ] &&
+    echo "Number of WhiteListVolume's parameter is wrong" &&
+    exit 0
+  fi
+  j=$(( j + 1 ))
+done <<EOD
+$WhiteListVolumes
+EOD
+
+# Create $WhiteListVolumeParameter from $WhiteListVolumes
+# For cases where special characters (such as $ IFS) are present in volume-name,
+# make $IFS ="" then Join Strings with $'\001' .
+
+IFS_old=$IFS
+IFS=
+
+j="1"   # Odd/Even line determinant
+
+# Read every records from $WhiteListVolumes, and Add New Recode or Join Data.
+while read i ;do
+
+    if [ "$j" -eq "1" ] ;then             #$j=1/ FirstRecord..VolumeName -> Add New Record
+        WhiteListVolumeParameter="$i"
+
+    elif [ "$(( j % 2 ))" -eq "0" ] ;then #Even/ NextField..Protcol,UUID,etc  -> Join Data
+        WhiteListVolumeParameter="$WhiteListVolumeParameter"$'\001'"$i"$'\n'
+
+    elif [ "$(( j % 2 ))" -eq "1" ] ;then #Odd/ NextRecord..VolumeName   -> Add New Record
+        WhiteListVolumeParameter="$WhiteListVolumeParameter""$i"
+    fi
+
+    j=$(( j + 1 ))
+
+done <<EOD
+$WhiteListVolumes
+EOD
+
+IFS=$IFS_old
+
+# Delete last blank-line
+WhiteListVolumeParameter="$( echo "$WhiteListVolumeParameter" |grep -v ^$ )"
+
+
+# for debug
+echo '$WhiteListVolumeParameter:'
+echo "$WhiteListVolumeParameter"
+
+}
+
+
+
+# ------------------------------------------------------------------------------
+# 2.function GetOuterVolumeList()
+#
+#
+
+function GetOuterVolumeList()
+{
+StartupVolume=$(df / |grep ^/dev |cut -d' ' -f1)
+StartupDisk=$(echo $StartupVolume |sed 's/s[0-9]*$//')
+ListOfOuterVolumes=$(df |grep ^/dev |cut -d' ' -f1 |grep -v "$StartupDisk"s)
+
+# for debug
+echo '$ListOfOuterVolumes:'
+echo "$ListOfOuterVolumes"
+}
+
+
+# ------------------------------------------------------------------------------
+# 3.function GetMyVolumeNameAndData()
+#
+#
+
+function GetMyVolumeNameAndData()
+{
+myVolumeName=$( diskutil info $myVolume |grep "Volume Name:" |cut -b 31- )
+myVolumeData=$(
+  diskutil info $myVolume |
+  grep "File System Personality:\|Protocol:\|Volume UUID:\|Partition UUID:" |
+  sed 's/^.*:[ ]*//g' |
+  tr '\n' ',' |
+  sed 's/,$//'
+)
+
+# For the cases of no "Partition UUID" (e.g. MBR/FAT) , add data
+[ "$( echo $myVolumeData |grep -o ',' |wc -l )" -eq "3" ] ||
+myVolumeData=$myVolumeData",*"
+}
+
+
+# ------------------------------------------------------------------------------
+# 4.function MakeMyWhiteVolumeNameAndData()
+#
+#
+
+function MakeMyWhiteVolumeNameAndData()
+{
+    myWhiteVolumeName=$( echo "$myWhiteListVolumeParameter" | cut -d$'\001' -f1 )
+    myWhiteVolumeData=$( echo "$myWhiteListVolumeParameter" | cut -d$'\001' -f2 )
+    myGrepWhiteVolumeData=$( echo "$myWhiteVolumeData" | sed 's/*/.*/g' )
+}
+
+
+############################ End of Functions ###################################
+
+
+
+
+
+################################# Processing ###################################
+#
+#
+#
+
+
+SendToLog "Volume Check is started!"
+
+# Check and make White-list Volume Parameter
+MakeWhiteListVolumeParameter    # $WhiteListVolumes -> $WhiteListVolumeParameter
+
+# Get Outer Volume list
+GetOuterVolumeList              #                   -> $ListOfOuterVolumes
+
+# Check every OuterVolume to "Eject" or "Still Mount"
+IFS_bak=$IFS
+IFS=$'\n'
+
+# Select one myVolume (from $ListOfOuterVolumes)
+for myVolume in $ListOfOuterVolumes ;do
+
+  myDeterminant="0"  # determinant to Eject: 0 -> Eject Volume, 1 -> Still Mount
+
+  GetMyVolumeNameAndData  # $myVolume -> $myVolumeName , $myVolumeData
+
+  # Compare myVolume-name/data <> every WhiteVolume-name/data in $WhiteListVolumeParameter
+  # if there ,set $myDeterminant to "1" (Still Mount)
+
+  while read myWhiteListVolumeParameter ;do
+
+    # Make WhiteVolume-name/data
+    MakeMyWhiteVolumeNameAndData # $myWhiteListVolumeParameter -> $myWhiteVolumeName ,$myGrepWhiteVolumeData
+
+    [ "$myVolumeName" = "$myWhiteVolumeName" -o "$myWhiteVolumeName" = "*" ] && # Compare Name
+    [ $( echo "$myVolumeData" |grep "$myGrepWhiteVolumeData" ) ] &&             # Compare Data
+    myDeterminant="1" && break
+    
+  done <<-EOD
+$WhiteListVolumeParameter
+EOD
+
+  # if Volume-name/data is not in $WhiteListVolumeParameter, Eject Volume
+    [ "$myDeterminant" = "0" ] &&
+    diskutil unmount force $myVolume
+    SendToLog "$myVolumeName is Unmounted!"
 done
-echo "---"
 
-echo $List_of_Outer_Vol_WO_WLV
-
-[ "$List_of_Outer_Vol_WO_WLV" ] &&
-echo "Some disk is unmonted!"
-
-
+IFS=$IFS_bak
 
 
