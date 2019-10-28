@@ -361,7 +361,12 @@ function MakeMyWhiteVolumeNameAndData()
 #
 
 
+myCount=1
+
+for myCount in {1..10};do
+
 SendToLog "Volume Check is started!"
+SendToLog `echo $myCount` "/10"
 
 # Check and make White-list Volume Parameter
 MakeWhiteListVolumeParameter    # $WhiteListVolumes -> $WhiteListVolumeParameter
@@ -402,14 +407,15 @@ EOD
   # if this volume's eject-determinat is "0", Eject volume
     [ "$myDeterminant" = "0" ]                             &&
     diskutil unmount force $myVolume                       &&
-    SendToLog "$myVolumeName($myVolumeData) is Unmounted!" &&
-    Mes=$(echo "$Mes" | sed "s/%myVolumeName/- $myVolumeName -/")    &&
-    osascript <<-EOD &>/dev/null
-    tell application "System Events" to display dialog "$Mes" buttons {"OK"} with title "Caution" with icon 2 giving up after 10
-EOD
+    SendToLog "$myVolumeName($myVolumeData) is Unmounted!"
+#    SendToLog "$myVolumeName($myVolumeData) is Unmounted!" &&
+#    Mes=$(echo "$Mes" | sed "s/%myVolumeName/- $myVolumeName -/")    &&
+#    osascript <<-EOD &>/dev/null
+#    tell application "System Events" to display dialog "$Mes" buttons {"OK"} with title "Caution" with icon 2 giving up after 10
+#EOD
 
 done
 
 IFS=$IFS_bak
 
-
+done
