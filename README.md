@@ -2,7 +2,8 @@
 
 ## Overview
 This Bash ShellScript prevent (or control) mounting of external volumes.  
-According to the organization's policy, this script prevent (or control) certain external disk connections, e.g. USB thumb drive. 
+According to the organization's policy, this script prevent (or control) certain external disk connections, e.g. USB thumb drive.  
+
 ![PreventMount](https://user-images.githubusercontent.com/49780970/67717663-82f51a80-fa11-11e9-99ae-9ed4e398aab5.gif) 
 
 ## Description
