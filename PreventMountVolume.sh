@@ -55,7 +55,6 @@
 
 
 
-#123456789#123456789#123456789#123456789#123456789#123456789#123456789#123456789
 ######################## Set "Log" file and function ###########################
 
 LogPath=$HOME/log
@@ -367,27 +366,28 @@ IFS=$'\n'
 # Select one myVolume (from $ListOfOuterVolumes)
 for myVolume in $ListOfOuterVolumes ;do
 
-  myDeterminant="0"  # determinant to Eject: 0 -> Eject Volume, 1 -> Still Mount
+  # Define eject-determinant
+  myDeterminant="0"              # 0 -> Eject Volume, 1 -> Still Mount
 
-  GetMyVolumeNameAndData  # $myVolume -> $myVolumeName , $myVolumeData
+  # Get myVolume-name/data
+  GetMyVolumeNameAndData         # $myVolume -> $myVolumeName , $myVolumeData
 
-  # Compare myVolume-name/data <> every WhiteVolume-name/data in $WhiteListVolumeParameter
-  # if there ,set $myDeterminant to "1" (Still Mount)
-
+  # Compare myVolume-name/data with all WhiteVolume-name/data in $WhiteListVolumeParameter
+  # And if there ,change $myDeterminant to "1" (Still Mount)
   while read myWhiteListVolumeParameter ;do
 
-    # Make WhiteVolume-name/data
+    # Make myWhiteVolume-name/data
     MakeMyWhiteVolumeNameAndData # $myWhiteListVolumeParameter -> $myWhiteVolumeName ,$myGrepWhiteVolumeData
 
     [ "$myVolumeName" = "$myWhiteVolumeName" -o "$myWhiteVolumeName" = "*" ] && # Compare Name
-    [ $( echo "$myVolumeData" |grep "$myGrepWhiteVolumeData" ) ] &&             # Compare Data
-    myDeterminant="1" && break
+    [ $( echo "$myVolumeData" |grep "$myGrepWhiteVolumeData" ) ]             && # Compare Data
+    myDeterminant="1" && break                                                  # Change Determinant
     
   done <<-EOD
-$WhiteListVolumeParameter
+    $WhiteListVolumeParameter
 EOD
 
-  # if Volume-name/data is not in $WhiteListVolumeParameter, Eject Volume
+  # if eject-determinat is "0", Eject this volume
     [ "$myDeterminant" = "0" ]              &&
     diskutil unmount force $myVolume        &&
     SendToLog "$myVolumeName is Unmounted!"
