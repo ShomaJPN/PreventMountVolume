@@ -4,7 +4,7 @@
 ##
 ## Name:
 ##  PreventMountVolume.sh
-##  Created by SHOMA on 9/13/2019. Last edited by SHOMA 10/15/2019
+##  Created by SHOMA on 9/13/2019. Last edited by SHOMA 10/29/2019
 ##
 ## Overview
 ##  Prevent (or control) mounting of external volumes, e.g. USB thumb drive.
@@ -82,48 +82,59 @@ echo $(date +"%Y-%m-%d %T") : $@ | tee -a "$LogFile"
 ############################### Set Variables ##################################
 #
 # Name:
-#   WhiteListVolumes
-#
-# Discription:
-#   The list of Volumes's Parameters that are allowed to be mounted.
-#
-# Usage:
-#
-#   - Format -
-#
-#     VolName1
-#     FileSystem,Protcol,UUID(Volume),UUID(Partition)
-#
-#     VolName2
-#     FileSystem,Protcol,UUID(Volume),UUID(Partition)
-#     ...
-#     ...
+#   1.WhiteListVolumes
+#   2.Mes
 #
 #
-#   These are given by "$diskutil info diskXsX" ,and "ShowVolumeParameter.sh" could
-#   help it
-#   Also you can use wildcards(*).
+# Details
+#   1.WiteListVolumes
+#   
+#     Discription:
+#       The list of Volumes's Parameters that are allowed to be mounted.
 #
-# Reference:
+#     Usage:
+#       - Format -
 #
-#   -FileSystem ($ diskutil listFilesystems)
-#     APFS,Journaled HFS+,MS-DOS FAT16,MS-DOS FAT32 ...
+#         VolName1
+#         FileSystem,Protcol,UUID(Volume),UUID(Partition)
 #
-#   -Protcol
-#     PCI-Express,USB,ATA,FireWire,Thunderbolt ...
+#         VolName2
+#         FileSystem,Protcol,UUID(Volume),UUID(Partition)
+#         ...
+#         ...
 #
-#   -UUID(Volume)
-#     $ diskutil info diskXsX |sed -n '/Volume UUID/{;s/^.*Volume UUID:[ ]*//p;}'
+#       These are given by "$diskutil info diskXsX" ,and "ShowVolumeParameter.sh" could
+#       help it
+#       Also you can use wildcards(*).
 #
-#   -UUID(Partition)
-#     $ diskutil info diskXsX |sed -n '/Partition UUID/{;s/^.*Partition UUID:[ ]*//p;}'
+#     Reference:
 #
-#   Remark!
-#     In the case of no "Partition UUID" (..possibly MS-Windows disk), write "*" 
-#     in that section 
+#       -FileSystem ($ diskutil listFilesystems)
+#        APFS,Journaled HFS+,MS-DOS FAT16,MS-DOS FAT32 ...
+#
+#       -Protcol
+#        PCI-Express,USB,ATA,FireWire,Thunderbolt ...
+#
+#       -UUID(Volume)
+#        $ diskutil info diskXsX |sed -n '/Volume UUID/{;s/^.*Volume UUID:[ ]*//p;}'
+#
+#       -UUID(Partition)
+#        $ diskutil info diskXsX |sed -n '/Partition UUID/{;s/^.*Partition UUID:[ ]*//p;}'
+#
+#     Remark:
+#       In the case of no "Partition UUID" (..possibly MS-Windows disk), write "*" 
+#       in that section 
 #
 #
-
+#   2.Mes
+#
+#     Discription:
+#       Messages notifying user to the volume-name of ejected
+#
+#     Usage:
+#       %EjectVolumes is replaced by the volume-name of ejected
+#
+#
 
 WhiteListVolumes="
 UNTITLED
@@ -139,7 +150,9 @@ Journaled HFS+,USB,CDDD66E9-36F5-309F-AAF0-9FACBD1A01B0,2EE2E792-8F14-48F4-B307-
 Mes="
 IT support team
 
-%myVolumeName was ejected, due to the organizational policy.
+%EjectVolumes
+
+was/were ejected, due to the organizational policy.
 
 If you are unsure, contact the IT support team (tel.xxx-xxxx-xxxx)
 
@@ -357,65 +370,79 @@ function MakeMyWhiteVolumeNameAndData()
 ################################# Processing ###################################
 #
 # Compare every OuterVolumes's Volume-name/data with WhiteListVolumeParameter
-# 
+# Repeated multiple times to accommodate slow-mounting-volumes.
 #
 
 
+# file that write ejected-volume-name (temp file)
+EjectLogPath=$HOME/log
+EjectLogFile=$LogPath/Eject$$.log
+
+SendToLog "Volume Check is started!"
+
+# Repeated multiple times to accommodate slow-mounting-volumes.
 myCount=1
 
 for myCount in {1..10};do
 
-SendToLog "Volume Check is started!"
-SendToLog `echo $myCount` "/10"
+  SendToLog `echo $myCount` "/10"
 
-# Check and make White-list Volume Parameter
-MakeWhiteListVolumeParameter    # $WhiteListVolumes -> $WhiteListVolumeParameter
+  # Check and make White-list Volume Parameter
+  MakeWhiteListVolumeParameter    # $WhiteListVolumes -> $WhiteListVolumeParameter
 
-# Get Outer Volume list
-GetOuterVolumeList              #                   -> $ListOfOuterVolumes
+  # Get Outer Volume list
+  GetOuterVolumeList              #                   -> $ListOfOuterVolumes
 
-# Use only LF(\n) as character-delimiters in "for" control statements
-IFS_bak=$IFS
-IFS=$'\n'
+  # Use only LF(\n) as character-delimiters in "for" control statements
+  IFS_bak=$IFS
+  IFS=$'\n'
 
-# Check every OuterVolume to "Eject" or "Still Mount"
-# Select one myVolume (from $ListOfOuterVolumes)
-for myVolume in $ListOfOuterVolumes ;do
+  # Check every OuterVolume to "Eject" or "Still Mount"
+  # Select one myVolume (from $ListOfOuterVolumes)
+  for myVolume in $ListOfOuterVolumes ;do
 
-  # Define eject-determinant
-  myDeterminant="0"              # 0 -> Eject Volume, 1 -> Still Mount
+    # Define eject-determinant
+    myDeterminant="0"              # 0 -> Eject Volume, 1 -> Still Mount
 
-  # Get myVolume-name/data
-  GetMyVolumeNameAndData         # $myVolume -> $myVolumeName , $myVolumeData
+    # Get myVolume-name/data
+    GetMyVolumeNameAndData         # $myVolume -> $myVolumeName , $myVolumeData
 
-  # Compare "myVolume-name/data" with "all WhiteVolume-name/data" in $WhiteListVolumeParameter
-  # And if there ,change $myDeterminant to "1" (Still Mount)
-  while read myWhiteListVolumeParameter ;do
+    # Compare "myVolume-name/data" with "all WhiteVolume-name/data" in $WhiteListVolumeParameter
+    # And if there ,change $myDeterminant to "1" (Still Mount)
+    while read myWhiteListVolumeParameter ;do
 
-    # Make myWhiteVolume-name/data
-    MakeMyWhiteVolumeNameAndData # $myWhiteListVolumeParameter -> $myWhiteVolumeName ,$myGrepWhiteVolumeData
+      # Make myWhiteVolume-name/data
+      MakeMyWhiteVolumeNameAndData # $myWhiteListVolumeParameter -> $myWhiteVolumeName ,$myGrepWhiteVolumeData
 
-    # Compare
-    [ "$myVolumeName" = "$myWhiteVolumeName" -o "$myWhiteVolumeName" = "*" ] && # Compare Name (Exact-match)
-    [ $( echo "$myVolumeData" |grep "$myGrepWhiteVolumeData" ) ]             && # Compare Data (grep-match)
-    myDeterminant="1" && break                                                  # Change Determinant
+      # Compare
+      [ "$myVolumeName" = "$myWhiteVolumeName" -o "$myWhiteVolumeName" = "*" ] && # Compare Name (Exact-match)
+      [ $( echo "$myVolumeData" |grep "$myGrepWhiteVolumeData" ) ]             && # Compare Data (grep-match)
+      myDeterminant="1" && break                                                  # Change Determinant
     
-  done <<-EOD
+    done <<-EOD
 $WhiteListVolumeParameter
 EOD
 
-  # if this volume's eject-determinat is "0", Eject volume
-    [ "$myDeterminant" = "0" ]                             &&
-    diskutil unmount force $myVolume                       &&
-    SendToLog "$myVolumeName($myVolumeData) is Unmounted!"
-#    SendToLog "$myVolumeName($myVolumeData) is Unmounted!" &&
-#    Mes=$(echo "$Mes" | sed "s/%myVolumeName/- $myVolumeName -/")    &&
-#    osascript <<-EOD &>/dev/null
-#    tell application "System Events" to display dialog "$Mes" buttons {"OK"} with title "Caution" with icon 2 giving up after 10
-#EOD
+    # if this volume's eject-determinat is "0", Eject volume
+      [ "$myDeterminant" = "0" ]                             &&
+      diskutil unmount force $myVolume                       &&
+      SendToLog "$myVolumeName($myVolumeData) is Unmounted!" &&
+      echo " - $myVolumeName -" | tee -a "$EjectLogFile"
+
+  done
+
+  IFS=$IFS_bak
 
 done
 
-IFS=$IFS_bak
 
-done
+# Display Dialog & Logging..
+[ -f $EjectLogFile ]                                            &&
+ EjectVolumes=$(cat $EjectLogFile)                              &&
+ echo "EjectVolumes: $EjectVolumes"             　              &&
+ Mes=$(echo "$Mes" |perl -pe "s/%EjectVolumes/$EjectVolumes/g") &&
+ osascript <<-EOD &>/dev/null                                   &&
+  tell application "System Events" to display dialog "$Mes" buttons {"OK"} with title "Caution" with icon 2 giving up after 10
+EOD
+ rm $EjectLogFile                                               &&
+ SendToLog "EjectVolumes: ""$EjectVolumes"
