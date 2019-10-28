@@ -246,11 +246,11 @@ $WhiteListVolumes
 EOD
 
 # Create $WhiteListVolumeParameter from $WhiteListVolumes
-# For cases where special characters (such as $ IFS) are present in volume-name,
+# For the cases that special-characters (such as $IFS) are present in volume-name,
 # make $IFS ="" then Join Strings with $'\001' .
 
 IFS_old=$IFS
-IFS=
+IFS=""
 
 j="1"   # Odd/Even line determinant
 
@@ -347,7 +347,8 @@ function MakeMyWhiteVolumeNameAndData()
 
 ################################# Processing ###################################
 #
-#
+# Compare every OuterVolumes's Volume-name/data with WhiteListVolumeParameter
+# 
 #
 
 
@@ -359,10 +360,11 @@ MakeWhiteListVolumeParameter    # $WhiteListVolumes -> $WhiteListVolumeParameter
 # Get Outer Volume list
 GetOuterVolumeList              #                   -> $ListOfOuterVolumes
 
-# Check every OuterVolume to "Eject" or "Still Mount"
+# Use only LF(\n) as character-delimiters in "for" control statements
 IFS_bak=$IFS
 IFS=$'\n'
 
+# Check every OuterVolume to "Eject" or "Still Mount"
 # Select one myVolume (from $ListOfOuterVolumes)
 for myVolume in $ListOfOuterVolumes ;do
 
@@ -372,22 +374,23 @@ for myVolume in $ListOfOuterVolumes ;do
   # Get myVolume-name/data
   GetMyVolumeNameAndData         # $myVolume -> $myVolumeName , $myVolumeData
 
-  # Compare myVolume-name/data with all WhiteVolume-name/data in $WhiteListVolumeParameter
+  # Compare "myVolume-name/data" with "all WhiteVolume-name/data" in $WhiteListVolumeParameter
   # And if there ,change $myDeterminant to "1" (Still Mount)
   while read myWhiteListVolumeParameter ;do
 
     # Make myWhiteVolume-name/data
     MakeMyWhiteVolumeNameAndData # $myWhiteListVolumeParameter -> $myWhiteVolumeName ,$myGrepWhiteVolumeData
 
-    [ "$myVolumeName" = "$myWhiteVolumeName" -o "$myWhiteVolumeName" = "*" ] && # Compare Name
-    [ $( echo "$myVolumeData" |grep "$myGrepWhiteVolumeData" ) ]             && # Compare Data
+    # Compare
+    [ "$myVolumeName" = "$myWhiteVolumeName" -o "$myWhiteVolumeName" = "*" ] && # Compare Name (Exact-match)
+    [ $( echo "$myVolumeData" |grep "$myGrepWhiteVolumeData" ) ]             && # Compare Data (grep-match)
     myDeterminant="1" && break                                                  # Change Determinant
     
   done <<-EOD
 $WhiteListVolumeParameter
 EOD
 
-  # if eject-determinat is "0", Eject this volume
+  # if this volume's eject-determinat is "0", Eject volume
     [ "$myDeterminant" = "0" ]              &&
     diskutil unmount force $myVolume        &&
     SendToLog "$myVolumeName is Unmounted!"
