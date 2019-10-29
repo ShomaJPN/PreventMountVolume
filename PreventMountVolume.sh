@@ -327,13 +327,13 @@ echo "$WhiteListVolumeParameter"
 
 function GetOuterVolumeList()
 {
-StartupVolume=$(df / |grep ^/dev |cut -d' ' -f1)
-StartupDisk=$(echo $StartupVolume |sed 's/s[0-9]*$//')
-ListOfOuterVolumes=$(df |grep ^/dev |cut -d' ' -f1 |grep -v "$StartupDisk"s)
+    StartupVolume=$(df / |grep ^/dev |cut -d' ' -f1)
+    StartupDisk=$(echo $StartupVolume |sed 's/s[0-9]*$//')
+    ListOfOuterVolumes=$(df |grep ^/dev |cut -d' ' -f1 |grep -v "$StartupDisk"s)
 
 # for debug
-echo '$ListOfOuterVolumes:'
-echo "$ListOfOuterVolumes"
+    echo '$ListOfOuterVolumes:'
+    echo "$ListOfOuterVolumes"
 }
 
 
@@ -344,18 +344,18 @@ echo "$ListOfOuterVolumes"
 
 function GetMyVolumeNameAndData()
 {
-myVolumeName=$( diskutil info $myVolume |grep "Volume Name:" |cut -b 31- )
-myVolumeData=$(
-    diskutil info $myVolume |
-    grep "File System Personality:\|Protocol:\|Volume UUID:\|Partition UUID:" |
-    sed 's/^.*:[ ]*//g' |
-    tr '\n' ',' |
-    sed 's/,$//'
+    myVolumeName=$( diskutil info $myVolume |grep "Volume Name:" |cut -b 31- )
+    myVolumeData=$(
+        diskutil info $myVolume |
+        grep "File System Personality:\|Protocol:\|Volume UUID:\|Partition UUID:" |
+        sed 's/^.*:[ ]*//g' |
+        tr '\n' ',' |
+        sed 's/,$//'
 )
 
 # For the cases of no "Partition UUID" (e.g. MBR/FAT) , add data
-[ "$( echo $myVolumeData |grep -o ',' |wc -l )" -eq "3" ] ||
-    myVolumeData=$myVolumeData",*"
+    [ "$( echo $myVolumeData |grep -o ',' |wc -l )" -eq "3" ] ||
+        myVolumeData=$myVolumeData",*"
 }
 
 
@@ -407,38 +407,38 @@ SendToLog "Volume Check is started!"
 
 # Repeated multiple times to accommodate slow-mounting-volumes.
 myCount="1"
-for myCount in {1..10};do                             # Repeated for slow-mounting-volumes loop ++++
-  SendToLog $( echo $myCount ) "/10"
-  GetOuterVolumeList
+for myCount in {1..10};do                             # Repeated for slow-mounting-volumes loop \\\\
+    SendToLog $( echo $myCount ) "/10"
+    GetOuterVolumeList
 
-  # Set $IFS to "\n" in "for" control statements
-  IFS_bak=$IFS
-  IFS=$'\n'
+    # Set $IFS to "\n" in "for" control statements
+    IFS_bak=$IFS
+    IFS=$'\n'
 
-  for myVolume in $ListOfOuterVolumes ;do             # Choose one OuterVolume loop ================
-    myDeterminant="0"                                   # 0 -> Eject Volume, 1 -> Mount
-    GetMyVolumeNameAndData
+    for myVolume in $ListOfOuterVolumes ;do             # Choose one OuterVolume loop ================
+      GetMyVolumeNameAndData
+      myDeterminant="0"      # 0 -> Eject Volume, 1 -> Mount
 
-    while read myWhiteListVolumeParameter ;do         # Choose one WhiteVolumeParameter loop -------
-      MakeMyWhiteVolumeNameAndData
+      while read myWhiteListVolumeParameter ;do         # Choose one WhiteVolumeParameter loop -------
+          MakeMyWhiteVolumeNameAndData
 
-      [ "$myVolumeName" = "$myWhiteVolumeName" -o "$myWhiteVolumeName" = "*" ] && # Compare Name (Exact-match)
-      [ $( echo "$myVolumeData" |grep "$myGrepWhiteVolumeData" ) ]             && # Compare Data (grep-match)
-        myDeterminant="1" && break                                                # Change Determinant
-    done <<-EOD
+          [ "$myVolumeName" = "$myWhiteVolumeName" -o "$myWhiteVolumeName" = "*" ] && # Compare Name (Exact-match)
+          [ $( echo "$myVolumeData" |grep "$myGrepWhiteVolumeData" ) ]             && # Compare Data (grep-match)
+            myDeterminant="1" && break                                                # Change Determinant
+      done <<-EOD
 $WhiteListVolumeParameter
 EOD
                                                       # Choose one WhiteVolumeParameter end loop ---
-    # Eject volume 
-    [ "$myDeterminant" = "0" ]                                 &&
-      diskutil unmount force $myVolume                         &&
-      SendToLog "$myVolumeName($myVolumeData) is Unmounted!"   &&
-      echo " - $myVolumeName -" | tee -a "$EjectLogFile"
-  done
+      # Eject volume 
+      [ "$myDeterminant" = "0" ]                                 &&
+        diskutil unmount force $myVolume                         &&
+        SendToLog "$myVolumeName($myVolumeData) is Unmounted!"   &&
+        echo " - $myVolumeName -" | tee -a "$EjectLogFile"
+    done
                                                       # Choose one OuterVolume end loop ============
   IFS=$IFS_bak
 done
-                                                      # Repeated for slow-mounting-volumes loop end ++++
+                                                      # Repeated for slow-mounting-volumes loop end \\\\
 
 # Display Dialog & Logging..
 [ -f "$EjectLogFile" ]                                             &&
