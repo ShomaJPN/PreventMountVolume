@@ -13,7 +13,8 @@
 ##
 ## Description
 ##  Simple implementaion using launchd's StartOnMount trigger.(Not use fstab(5))
-##  Do not specifying only the VolumeName ,because it is not perfect in this ver.
+##  Do not specifying White-volumes only by the VolumeName ,because it is not
+##  perfect in this ver.
 ##
 ## Requirements:
 ##  -macOS
@@ -38,10 +39,10 @@
 ##       launchctl list
 ##
 ##  - A confirmation dialog (xxx would like to control "System Events"...)
-##    appear at the first run, then allow it.  
+##    appear at the first run, then allow it.
+##    If you do not allow by mistake, try "$ tccutil reset AppleEvents"
 ##
 ## References:
-##  If you did not confirm it by mistake, try "$ tccutil reset AppleEvents"
 ##  If you want to apply all users, please consider to put commnad-plist into
 ##  /Library/LaunchAgents/
 ##
@@ -107,7 +108,7 @@ echo $(date +"%Y-%m-%d %T") : $@ | tee -a "$LogFile"
 #       could help it
 #       Also you can use wildcards(*).
 #
-#     Reference:
+#     References:
 #
 #       -FileSystem ($ diskutil listFilesystems)
 #        APFS,Journaled HFS+,MS-DOS FAT16,MS-DOS FAT32 ...
@@ -122,7 +123,7 @@ echo $(date +"%Y-%m-%d %T") : $@ | tee -a "$LogFile"
 #        $ diskutil info diskXsX |sed -n '/Partition UUID/{;s/^.*Partition UUID:[ ]*//p;}'
 #
 #     Remark:
-#       In the case of no "Partition UUID" (..possibly MS-Windows disk), write "*" 
+#       If there is no "Partition UUID" (..possibly MS-Windows disk), write "*" 
 #       in that section 
 #
 #
