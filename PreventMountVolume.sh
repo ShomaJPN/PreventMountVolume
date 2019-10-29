@@ -78,12 +78,12 @@ echo $(date +"%Y-%m-%d %T") : $@ | tee -a "$LogFile"
 
 
 
-
+:
 ############################### Set Variables ##################################
 #
 # Name:
-#   1.WhiteListVolumes
-#   2.Mes
+#   1.WhiteListVolumes : Volumes's Parameters allowed to be mounted.
+#   2.Mes              : User notify messages
 #
 #
 # Details
@@ -103,8 +103,8 @@ echo $(date +"%Y-%m-%d %T") : $@ | tee -a "$LogFile"
 #         ...
 #         ...
 #
-#       These are given by "$diskutil info diskXsX" ,and "ShowVolumeParameter.sh" could
-#       help it
+#       These are given by "$diskutil info diskXsX" ,and "ShowVolumeParameter.sh"
+#       could help it
 #       Also you can use wildcards(*).
 #
 #     Reference:
@@ -205,14 +205,14 @@ If you are unsure, contact the IT support team (tel.xxx-xxxx-xxxx)
 #      NA
 #
 #    Output:
-#      $StartupVolume, $StartupDisk, $ListOfOuterVolumes
+#      $StartupDisk, $StartupVolume, $ListOfOuterVolumes
 #
 #
 #
 #  3.function GetMyVolumeNameAndData()
 #
 #    Discription:
-#      Get Volume-name and Volume-data from $myVolume
+#      Get Volume name,data from Volume Identifer(ex. /dev/diskXsX)
 #
 #    Requirements:
 #      $myVolume (ex. /dev/diskXsX)
@@ -227,8 +227,8 @@ If you are unsure, contact the IT support team (tel.xxx-xxxx-xxxx)
 #  4.function MakeMyWhiteVolumeNameAndData()
 #
 #    Discription:
-#      -Get $myWhiteVolumeName,$myWhiteVolumeData from $myWhiteListVolumeParameter
-#      -Create $GrepWhiteVolumeData (for grep-match)
+#      Decompress WhiteVolumeName,Data from WhiteListVolumeParameter
+#      Make grep-comparison data
 #
 #    Requirements:
 #      $myWhiteListVolumeParameter (is given in correct format)
@@ -246,46 +246,53 @@ If you are unsure, contact the IT support team (tel.xxx-xxxx-xxxx)
 
 function MakeWhiteListVolumeParameter ()
 {
+
+# ReFormat. Delete blank-line
 WhiteListVolumes="$( echo "$WhiteListVolumes" |grep -v ^$ )"
 
-# Simple Check -> $WhiteListVolumes
-# 1/2.Check the parity of the number of lines
-[ $(( $(echo "$WhiteListVolumes" |wc -l) % 2 )) -eq "1" ] && 
-echo "Number of WhiteListVolumes's Line is Odd" &&
-exit 0
+# Check1. Parity of the number of lines
+[ $(( $(echo "$WhiteListVolumes" |wc -l) % 2 )) -eq "1" ]   && 
+ echo "Number of WhiteListVolumes's Line is Odd"            &&
+ exit 0
 
-# 2/2.Check the number of parameters (in data-part)
+# Check2. Number of parameters (in data-part)
 j="1"
 while read i ;do
-  if [ $(( j % 2)) -eq 0 ] ; then          # choose data-part
-    [ $(echo "$i" | grep -o ',' |wc -l) -ne "3" ] &&
-    echo "Number of WhiteListVolume's parameter is wrong" &&
-    exit 0
+  if [ $(( j % 2 )) -eq 0 ] ; then                             # choose data-part
+     [ $(echo "$i" | grep -o ',' |wc -l) -ne "3" ]       　 && # count parameters
+     echo "Number of WhiteListVolume's parameter is wrong"  &&
+     exit 0
   fi
   j=$(( j + 1 ))
 done <<EOD
 $WhiteListVolumes
 EOD
 
-# Create $WhiteListVolumeParameter from $WhiteListVolumes
-# For the cases that special-characters (such as $IFS) are present in volume-name,
-# make $IFS ="" then Join Strings with $'\001' .
+
+# Create WhiteListVolumeParameter
+#   ex.VolName1
+#      VolData1 -> VolName1 VolData1
+#      VolName2
+#      VolData2 -> VolName2 VolData2
+#
+# For the cases of special-characters (such as $IFS) in volume-name,
+# make $IFS ="" then Join with $'\001' .
 
 IFS_old=$IFS
 IFS=""
 
-j="1"   # Odd/Even line determinant
+# Read every records from $WhiteListVolumes
+# then Add New Recode or Join Data.
+j="1"                                     # Odd/Even line determinant
+while read i ;do                          # Read every records
 
-# Read every records from $WhiteListVolumes, and Add New Recode or Join Data.
-while read i ;do
-
-    if [ "$j" -eq "1" ] ;then             #$j=1/ FirstRecord..VolumeName -> Add New Record
+    if [ "$j" -eq "1" ] ;then             # $j=1/ FirstRecord..VolumeName        -> Add New Record
         WhiteListVolumeParameter="$i"
 
-    elif [ "$(( j % 2 ))" -eq "0" ] ;then #Even/ NextField..Protcol,UUID,etc  -> Join Data
+    elif [ "$(( j % 2 ))" -eq "0" ] ;then # Even line/ NextField..Protcol,UUID,, -> Join Data
         WhiteListVolumeParameter="$WhiteListVolumeParameter"$'\001'"$i"$'\n'
 
-    elif [ "$(( j % 2 ))" -eq "1" ] ;then #Odd/ NextRecord..VolumeName   -> Add New Record
+    elif [ "$(( j % 2 ))" -eq "1" ] ;then # Odd line / NextRecord..VolumeName    -> Add New Record
         WhiteListVolumeParameter="$WhiteListVolumeParameter""$i"
     fi
 
@@ -374,47 +381,30 @@ function MakeMyWhiteVolumeNameAndData()
 #
 
 
-# file that write ejected-volume-name (temp file)
-EjectLogPath=$HOME/log
-EjectLogFile=$LogPath/Eject$$.log
+# temp-file that write ejected-volume-name in
+EjectLogPath="$HOME/log"
+EjectLogFile="$LogPath/Eject$$.log"
 
 SendToLog "Volume Check is started!"
 
 # Repeated multiple times to accommodate slow-mounting-volumes.
-myCount=1
-
+myCount="1"
 for myCount in {1..10};do
-
   SendToLog $( echo $myCount ) "/10"
-
-  # Check and make White-list Volume Parameter
   MakeWhiteListVolumeParameter    # $WhiteListVolumes -> $WhiteListVolumeParameter
-
-  # Get Outer Volume list
   GetOuterVolumeList              #                   -> $ListOfOuterVolumes
 
   # Use only LF(\n) as character-delimiters in "for" control statements
   IFS_bak=$IFS
   IFS=$'\n'
 
-  # Check every OuterVolume to "Eject" or "Still Mount"
-  # Select one myVolume (from $ListOfOuterVolumes)
   for myVolume in $ListOfOuterVolumes ;do
-
-    # Define eject-determinant
     myDeterminant="0"              # 0 -> Eject Volume, 1 -> Still Mount
-
-    # Get myVolume-name/data
     GetMyVolumeNameAndData         # $myVolume -> $myVolumeName , $myVolumeData
 
     # Compare "myVolume-name/data" with "all WhiteVolume-name/data" in $WhiteListVolumeParameter
-    # And if there ,change $myDeterminant to "1" (Still Mount)
     while read myWhiteListVolumeParameter ;do
-
-      # Make myWhiteVolume-name/data
       MakeMyWhiteVolumeNameAndData # $myWhiteListVolumeParameter -> $myWhiteVolumeName ,$myGrepWhiteVolumeData
-
-      # Compare
       [ "$myVolumeName" = "$myWhiteVolumeName" -o "$myWhiteVolumeName" = "*" ] && # Compare Name (Exact-match)
       [ $( echo "$myVolumeData" |grep "$myGrepWhiteVolumeData" ) ]             && # Compare Data (grep-match)
       myDeterminant="1" && break                                                  # Change Determinant
@@ -423,26 +413,26 @@ for myCount in {1..10};do
 $WhiteListVolumeParameter
 EOD
 
-    # if this volume's eject-determinat is "0", Eject volume
+    # Eject volume, if eject-determinat is "0", 
       [ "$myDeterminant" = "0" ]                             &&
       diskutil unmount force $myVolume                       &&
       SendToLog "$myVolumeName($myVolumeData) is Unmounted!" &&
       echo " - $myVolumeName -" | tee -a "$EjectLogFile"
 
   done
-
   IFS=$IFS_bak
-
 done
 
 
 # Display Dialog & Logging..
-[ -f $EjectLogFile ]                                            &&
- EjectVolumes=$(cat $EjectLogFile)                              &&
+[ -f "$EjectLogFile" ]                                          &&
+ EjectVolumes=$(cat "$EjectLogFile")                            &&
  echo "EjectVolumes: $EjectVolumes"             　              &&
  Mes=$(echo "$Mes" |perl -pe "s/%EjectVolumes/$EjectVolumes/g") &&
  osascript <<-EOD &>/dev/null                                   &&
   tell application "System Events" to display dialog "$Mes" buttons {"OK"} with title "Caution" with icon 2 giving up after 10
 EOD
- rm $EjectLogFile                                               &&
+ rm "$EjectLogFile"                                             &&
  SendToLog "EjectVolumes: ""$EjectVolumes"
+
+
