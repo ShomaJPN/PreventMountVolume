@@ -76,6 +76,17 @@ function SendToLog ()
 echo $(date +"%Y-%m-%d %T") : $@ | tee -a "$LogFile"
 }
 
+
+# for Record Ejected-Volumes (temp-file)
+EjectLogPath="$HOME/log"
+EjectLogFile="$LogPath/Eject$$.log"
+
+function SendToEjectLogFile ()
+{
+echo $@ | tee -a "$EjectLogFile"
+}
+
+
 ##################### End of set "Log" file and function #######################
 
 
@@ -400,28 +411,25 @@ function MakeMyWhiteVolumeNameAndData()
 #
 #
 
-# temp-file for ejected-volume-names
-EjectLogPath="$HOME/log"
-EjectLogFile="$LogPath/Eject$$.log"
 
 MakeWhiteListVolumeParameter    # -> $WhiteListVolumeParameter
 SendToLog "Volume Check is started!"
 
 # Repeated multiple times to accommodate slow-mounting-volumes.
 myCount="1"
-for myCount in {1..10};do                             # Repeated for slow-mounting-volumes loop \\\\
+for myCount in {1..10};do                               # Repeated for slow-mounting-volumes loop \\\\
     SendToLog $( echo $myCount ) "/10"
     GetOuterVolumeList
 
     # Set $IFS to "\n" in "for" control statements
     IFS_bak=$IFS
     IFS=$'\n'
-
-    for myVolume in $ListOfOuterVolumes ;do             # Choose one OuterVolume loop ================
+                                                        # Choose one OuterVolume loop ================
+    for myVolume in $ListOfOuterVolumes ;do
       GetMyVolumeNameAndData
       myDeterminant="0"      # 0 -> Eject Volume, 1 -> Mount
-
-      while read myWhiteListVolumeParameter ;do         # Choose one WhiteVolumeParameter loop -------
+                                                        # Choose one WhiteVolumeParameter loop -------
+      while read myWhiteListVolumeParameter ;do
           MakeMyWhiteVolumeNameAndData
 
           [ "$myVolumeName" = "$myWhiteVolumeName" -o "$myWhiteVolumeName" = "*" ] && # Compare Name (Exact-match)
@@ -435,7 +443,7 @@ EOD
       [ "$myDeterminant" = "0" ]                                 &&
         diskutil unmount force $myVolume                         &&
         SendToLog "$myVolumeName($myVolumeData) is Unmounted!"   &&
-        echo " - $myVolumeName -" | tee -a "$EjectLogFile"
+        SendToEjectLogFile " - $myVolumeName -"
     done
                                                       # Choose one OuterVolume end loop ============
   IFS=$IFS_bak
