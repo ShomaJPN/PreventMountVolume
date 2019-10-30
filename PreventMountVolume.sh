@@ -210,7 +210,6 @@ If you are unsure, contact the IT support team (tel.xxx-xxxx-xxxx)
 #
 #    Output:
 #      $WhiteListVolumeParameter
-#      
 #
 #
 #  2.function GetOuterVolumeList()
@@ -225,7 +224,6 @@ If you are unsure, contact the IT support team (tel.xxx-xxxx-xxxx)
 #      $StartupDisk, $StartupVolume, $ListOfOuterVolumes
 #
 #
-#
 #  3.function GetMyVolumeNameAndData()
 #
 #    Discription:
@@ -238,7 +236,6 @@ If you are unsure, contact the IT support team (tel.xxx-xxxx-xxxx)
 #      $myVolumeName,$myVolumeData
 #
 #      example: $myVolumeData -> APFS,USB,UUID(Volume),UUID(Partition)
-#      
 #
 #
 #  4.function MakeMyWhiteVolumeNameAndData()
@@ -257,9 +254,6 @@ If you are unsure, contact the IT support team (tel.xxx-xxxx-xxxx)
 
 
 # ------------------------------------------------------------------------------
-#  1.function MakeWhiteListVolumeParameter()
-#
-#
 
 function MakeWhiteListVolumeParameter ()
 {
@@ -338,11 +332,7 @@ echo "$WhiteListVolumeParameter"
 }
 
 
-
 # ------------------------------------------------------------------------------
-# 2.function GetOuterVolumeList()
-#
-#
 
 function GetOuterVolumeList()
 {
@@ -357,9 +347,6 @@ function GetOuterVolumeList()
 
 
 # ------------------------------------------------------------------------------
-# 3.function GetMyVolumeNameAndData()
-#
-#
 
 function GetMyVolumeNameAndData()
 {
@@ -379,9 +366,6 @@ function GetMyVolumeNameAndData()
 
 
 # ------------------------------------------------------------------------------
-# 4.function MakeMyWhiteVolumeNameAndData()
-#
-#
 
 function MakeMyWhiteVolumeNameAndData()
 {
