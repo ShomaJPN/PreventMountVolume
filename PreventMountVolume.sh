@@ -428,7 +428,7 @@ $WhiteListVolumeParameter
 EOD
                                                                                             ## Choose one WhiteVolumeParameter loop end---------
                                                                                                # Eject volume 
-      [ "$ChangeDeterminant" = "0" ]                             &&
+      [ "$EjectDeterminant" = "0" ]                              &&
         diskutil unmount force $myVolume                         &&
         SendToLog "$myVolumeName($myVolumeData) is Unmounted!"   &&
         SendToEjectLogFile " - $myVolumeName -"
