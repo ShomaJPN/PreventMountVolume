@@ -20,6 +20,7 @@
 ##  -macOS
 ##  - Bash (for ShellScript)
 ##   - osascript (for FinderDialog)
+##   - perl (for variable-replacement )
 ##  -Test under macOS 10.14.6
 ##
 ## Install and Run:
@@ -48,7 +49,8 @@
 ##
 ##
 ## Should be implemented in the future:
-##   -VolumeName Exact-match func. 
+##   -VolumeName Exact-match func.
+##   -SendToEjectLog(temp-file) func.
 ##
 ## Author: SHOMA Shimahara <shoma@yk.rim.or.jp>
 ##
