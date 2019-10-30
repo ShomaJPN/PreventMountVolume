@@ -264,19 +264,19 @@ If you are unsure, contact the IT support team (tel.xxx-xxxx-xxxx)
 function MakeWhiteListVolumeParameter ()
 {
 
-# ReFormat. Delete blank-line
+                                                                                       # ReFormat. Delete blank-line
 WhiteListVolumes="$( echo "$WhiteListVolumes" |grep -v ^$ )"
 
-# Check1. Parity of the number of lines
+                                                                                       # Check1. Parity of the number of lines
 [ $(( $(echo "$WhiteListVolumes" |wc -l) % 2 )) -eq "1" ]   && 
    echo "Number of WhiteListVolumes's Line is Odd"          &&
    exit 1
 
-# Check2. Number of parameters (in data-part)
-j="1"
+                                                                                       # Check2. Number of parameters (in data-part)
+j="1"                                                                                    # Name/Data-line determinant
 while read i ;do
-    if [ $(( j % 2 )) -eq 0 ] ; then                             # choose data-part
-        [ $(echo "$i" | grep -o ',' | wc -l) -ne "3" ]        && # count parameters
+    if [ $(( j % 2 )) -eq 0 ] ; then                                                     # choose Data-line
+        [ $(echo "$i" | grep -o ',' | wc -l) -ne "3" ]        &&                         # count parameters
         echo "Number of WhiteListVolume's parameter is wrong" &&
         exit 1
     fi
@@ -286,24 +286,30 @@ $WhiteListVolumes
 EOD
 
 
-# Create WhiteListVolumeParameter
-#   ex.VolName1
-#      VolData1 -> VolName1 VolData1
-#      VolName2
-#      VolData2 -> VolName2 VolData2
-#
+
 # For the cases of special-characters (such as $IFS) in volume-name,
 # make $IFS ="" then join data with $'\001' .
 
 IFS_old=$IFS
 IFS=""
 
-# Read every records from $WhiteListVolumes
-# then Add New Recode or Add Data
-#   First line ($j=1) and Odd line -> Make new record
-#   Even line                      -> Add data to record with $'\001' 
+# Make $WhiteListVolumeParameter from $WhiteListVolumes
+#
+# Read $WhiteListVolumes..then..
+#
+#   1st line ($j=1) and Odd line -> Make new record
+#   Even line                    -> Add data to current record with $'\001'
+#
+#  ex.
+#     $WhiteListVolumes -> $WhiteListVolumeParameter
+#       VolName1
+#       VolData1        ->   VolName1 $'\001' VolData1
+#       VolName2
+#       VolData2        ->   VolName2 $'\001' VolData2
+#       ..                   ..
+#
 
-j="1"                                      # Odd/Even line determinant
+j="1"                                            # Odd/Even line determinant
 while read i ;do
 
     if [ "$j" -eq "1" ] ;then
@@ -393,7 +399,7 @@ function MakeMyWhiteVolumeNameAndData()
 
 ################################# Processing ###################################
 #
-# Compare every OuterVolumes's Volume-name/data with WhiteListVolumeParameter
+# Compare Volume-name/data of OuterVolumes with WhiteListVolumeParameter
 #
 # -flow---
 # 0.Read WhiteListVolumes and make WhiteListVolumeParameter
@@ -412,43 +418,41 @@ function MakeMyWhiteVolumeNameAndData()
 #
 
 
-MakeWhiteListVolumeParameter    # -> $WhiteListVolumeParameter
+MakeWhiteListVolumeParameter                                                                # -> $WhiteListVolumeParameter
 SendToLog "Volume Check is started!"
 
-# Repeated multiple times to accommodate slow-mounting-volumes.
 myCount="1"
-for myCount in {1..10};do                               # Repeated for slow-mounting-volumes loop \\\\
+for myCount in {1..10};do                                                                   # Repeated for slow-mounting-volumes loop \\\\
     SendToLog $( echo $myCount ) "/10"
     GetOuterVolumeList
-
-    # Set $IFS to "\n" in "for" control statements
+                                                                                               # Set $IFS to "\n" in "for" control statements
     IFS_bak=$IFS
     IFS=$'\n'
-                                                        # Choose one OuterVolume loop ================
+                                                                                            ## Choose one OuterVolume loop start================
     for myVolume in $ListOfOuterVolumes ;do
       GetMyVolumeNameAndData
-      myDeterminant="0"      # 0 -> Eject Volume, 1 -> Mount
-                                                        # Choose one WhiteVolumeParameter loop -------
+      EjectDeterminant="0"                                                                     # Init Determinant : 0 -> Eject/ 1 -> Mount
+                                                                                            ## Choose one WhiteVolumeParameter loop start-------
       while read myWhiteListVolumeParameter ;do
           MakeMyWhiteVolumeNameAndData
 
-          [ "$myVolumeName" = "$myWhiteVolumeName" -o "$myWhiteVolumeName" = "*" ] && # Compare Name (Exact-match)
-          [ $( echo "$myVolumeData" |grep "$myGrepWhiteVolumeData" ) ]             && # Compare Data (grep-match)
-            myDeterminant="1" && break                                                # Change Determinant
+          [ "$myVolumeName" = "$myWhiteVolumeName" -o "$myWhiteVolumeName" = "*" ] &&          # Compare Name (Exact-match)
+          [ $( echo "$myVolumeData" |grep "$myGrepWhiteVolumeData" ) ]             &&          # Compare Data (grep-match)
+            EjectDeterminant="1" && break                                                      # Change Determinant
       done <<-EOD
 $WhiteListVolumeParameter
 EOD
-                                                      # Choose one WhiteVolumeParameter end loop ---
-      # Eject volume 
-      [ "$myDeterminant" = "0" ]                                 &&
+                                                                                            ## Choose one WhiteVolumeParameter loop end---------
+                                                                                               # Eject volume 
+      [ "$ChangeDeterminant" = "0" ]                             &&
         diskutil unmount force $myVolume                         &&
         SendToLog "$myVolumeName($myVolumeData) is Unmounted!"   &&
         SendToEjectLogFile " - $myVolumeName -"
     done
-                                                      # Choose one OuterVolume end loop ============
+                                                                                            ## Choose one OuterVolume loop end=================
   IFS=$IFS_bak
 done
-                                                      # Repeated for slow-mounting-volumes loop end \\\\
+                                                                                            # Repeated for slow-mounting-volumes loop end \\\\
 
 # Display Dialog & Logging..
 [ -f "$EjectLogFile" ]                                             &&
