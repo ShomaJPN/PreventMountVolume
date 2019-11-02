@@ -417,15 +417,13 @@ for myCount in {1..10};do                                                       
       GetMyVolumeNameAndData
       EjectDeterminant="0"                                                                     # Init Determinant : 0 -> Eject/ 1 -> Mount
                                                                                             ## Choose one WhiteVolumeParameter loop start-------
-      while read myWhiteListVolumeParameter ;do
+      for myWhiteListVolumeParameter in $WhiteListVolumeParameter ;do
           MakeMyWhiteVolumeNameAndData
 
           [ "$myVolumeName" = "$myWhiteVolumeName" -o "$myWhiteVolumeName" = "*" ] &&          # Compare Name (Exact-match)
           [ $( echo "$myVolumeData" |grep "$myGrepWhiteVolumeData" ) ]             &&          # Compare Data (grep-match)
             EjectDeterminant="1" && break                                                      # Change Determinant
-      done <<-EOD
-$WhiteListVolumeParameter
-EOD
+      done
                                                                                             ## Choose one WhiteVolumeParameter loop end---------
                                                                                                # Eject volume 
       [ "$EjectDeterminant" = "0" ]                              &&
@@ -434,7 +432,7 @@ EOD
         SendToEjectLogFile " - $myVolumeName -"
     done
                                                                                             ## Choose one OuterVolume loop end=================
-  IFS=$IFS_bak
+    IFS=$IFS_bak
 done
                                                                                             # Repeated for slow-mounting-volumes loop end \\\\
 
