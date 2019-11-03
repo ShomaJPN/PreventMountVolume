@@ -380,9 +380,10 @@ function MakeMyWhiteVolumeNameAndData()
 #   3.-> Choose one WhiteVolumeParameter
 #    4.-> Make WhiteVolumeName and WhiteVolumeData
 #     5.-> Compare VolumeName <> WhiteVolumeName ,VolumeData <> WhiteVolumeData
-#   6.-> Loop(to 3.)
-# 7.-> Loop(to 1.)
-# Eject Volume
+#      6.-> Eject Volume or not
+#   7.-> Loop(to 3.)
+# 8.-> Loop(to 1.)
+# 9.Display Dialog & Logging ...
 #
 # Remark:
 #   Repeated multiple times to accommodate slow-mounting-volumes.
