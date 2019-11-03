@@ -50,7 +50,6 @@
 ##
 ## Should be implemented in the future:
 ##   -VolumeName Exact-match func.
-##   -SendToEjectLog(temp-file) func.
 ##
 ## Author: SHOMA Shimahara <shoma@yk.rim.or.jp>
 ##
@@ -75,17 +74,6 @@ function SendToLog ()
 {
 echo $(date +"%Y-%m-%d %T") : $@ | tee -a "$LogFile"
 }
-
-
-# for Record Ejected-Volumes (temp-file)
-EjectLogPath="$HOME/log"
-EjectLogFile="$LogPath/Eject$$.log"
-
-function SendToEjectLogFile ()
-{
-echo $@ | tee -a "$EjectLogFile"
-}
-
 
 ##################### End of set "Log" file and function #######################
 
@@ -402,8 +390,8 @@ function MakeMyWhiteVolumeNameAndData()
 #
 
 
-MakeWhiteListVolumeParameter                                                                # -> $WhiteListVolumeParameter
 SendToLog "Volume Check is started!"
+MakeWhiteListVolumeParameter                                                                # -> $WhiteListVolumeParameter
 
 myCount="1"
 for myCount in {1..10};do                                                                   # Repeated for slow-mounting-volumes loop \\\\
@@ -414,8 +402,8 @@ for myCount in {1..10};do                                                       
     IFS=$'\n'
                                                                                             ## Choose one OuterVolume loop start================
     for myVolume in $ListOfOuterVolumes ;do
-      GetMyVolumeNameAndData
       EjectDeterminant="0"                                                                     # Init Determinant : 0 -> Eject/ 1 -> Mount
+      GetMyVolumeNameAndData
                                                                                             ## Choose one WhiteVolumeParameter loop start-------
       for myWhiteListVolumeParameter in $WhiteListVolumeParameter ;do
           MakeMyWhiteVolumeNameAndData
@@ -429,21 +417,20 @@ for myCount in {1..10};do                                                       
       [ "$EjectDeterminant" = "0" ]                              &&
         diskutil unmount force $myVolume                         &&
         SendToLog "$myVolumeName($myVolumeData) is Unmounted!"   &&
-        SendToEjectLogFile " - $myVolumeName -"
+        EjectVolumes="$EjectVolumes"$'\n'" - $myVolumeName -"
     done
                                                                                             ## Choose one OuterVolume loop end=================
     IFS=$IFS_bak
 done
                                                                                             # Repeated for slow-mounting-volumes loop end \\\\
 
+
 # Display Dialog & Logging..
-[ -f "$EjectLogFile" ]                                             &&
-    EjectVolumes=$(cat "$EjectLogFile")                            &&
+[ -n "$EjectVolumes" ]                                             &&
     Mes=$(echo "$Mes" |perl -pe "s/%EjectVolumes/$EjectVolumes/g") &&
     osascript <<-EOD &>/dev/null                                   &&
       tell application "System Events" to display dialog "$Mes" buttons {"OK"} with title "Caution" with icon 2 giving up after 10
 EOD
-    rm "$EjectLogFile"                                             &&
     SendToLog "EjectVolumes: ""$EjectVolumes"
 
 
