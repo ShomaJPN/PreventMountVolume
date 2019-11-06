@@ -246,34 +246,28 @@ If you are unsure, contact the IT support team (tel.xxx-xxxx-xxxx)
 function MakeWhiteListVolumeParameter ()
 {
 
-                                                                                       # ReFormat. Delete blank-line
-WhiteListVolumes="$( echo "$WhiteListVolumes" |grep -v ^$ )"
+WhiteListVolumes="$( echo "$WhiteListVolumes" |grep -v ^$ )"       # ReFormat. Delete blank-line
 
-                                                                                       # Check1. Parity of the number of lines
-[ $(( $(echo "$WhiteListVolumes" |wc -l) % 2 )) -eq "1" ]   && 
-   echo "Number of WhiteListVolumes's Line is Odd"          &&
-   exit 1
-
-                                                                                       # Check2. Number of parameters (in data-part)
-j="1"                                                                                    # Name/Data-line determinant
+[ $(( $(echo "$WhiteListVolumes" |wc -l) % 2 )) -eq "1" ]    &&    # Check1. Parity of the number of lines
+    echo "Number of WhiteListVolumes's Line is Odd"          &&
+    exit 1
+                                                                   # Check2. Number of parameters (in data-part)
+j="1"                                                                # Name/Data-line determinant
+echo "$WhiteListVolumes"                                     |
 while read i ;do
-    if [ $(( j % 2 )) -eq 0 ] ; then                                                     # choose Data-line
-        [ $(echo "$i" | grep -o ',' | wc -l) -ne "3" ]        &&                         # count parameters
-        echo "Number of WhiteListVolume's parameter is wrong" &&
-        exit 1
-    fi
+    [ $(( j % 2 )) -eq 0 ]                                   &&      # choose Data-line
+    [ $(echo "$i" | grep -o ',' | wc -l) -ne "3" ]           &&      # count parameters
+    echo "Number of WhiteListVolume's parameter is wrong"    &&
+    exit 1
     j=$(( j + 1 ))
-done <<EOD
-$WhiteListVolumes
-EOD
-
-
+done                                                         ||
+exit 1
 
 # For the cases of special-characters (such as $IFS) in volume-name,
 # make $IFS ="" then join data with $'\001' .
 
-IFS_old=$IFS
-IFS=""
+## IFS_old=$IFS
+## IFS=""
 
 # Make $WhiteListVolumeParameter from $WhiteListVolumes
 #
@@ -310,7 +304,7 @@ done <<EOD
 $WhiteListVolumes
 EOD
 
-IFS="$IFS_old"
+## IFS="$IFS_old"
 
 
 # for debug
