@@ -266,8 +266,8 @@ exit 1
 # For the cases of special-characters (such as $IFS) in volume-name,
 # make $IFS ="" then join data with $'\001' .
 
-## IFS_old=$IFS
-## IFS=""
+IFS_old=$IFS
+IFS=""
 
 # Make $WhiteListVolumeParameter from $WhiteListVolumes
 #
@@ -304,7 +304,7 @@ done <<EOD
 $WhiteListVolumes
 EOD
 
-## IFS="$IFS_old"
+IFS="$IFS_old"
 
 
 # for debug
