@@ -267,7 +267,7 @@ exit 1
 # make $IFS ="" then join data with $'\001' .
 
 IFS_old=$IFS
-IFS=""
+IFS=$'\n'
 
 # Make $WhiteListVolumeParameter from $WhiteListVolumes
 #
@@ -286,7 +286,7 @@ IFS=""
 #
 
 j="1"                                            # Odd/Even line determinant
-while read i ;do
+for i in $WhiteListVolumes ;do
 
     if [ "$j" -eq "1" ] ;then
         WhiteListVolumeParameter="$i"
@@ -300,9 +300,7 @@ while read i ;do
 
     j=$(( j + 1 ))
 
-done <<EOD
-$WhiteListVolumes
-EOD
+done
 
 IFS="$IFS_old"
 
