@@ -252,22 +252,17 @@ WhiteListVolumes="$( echo "$WhiteListVolumes" |grep -v ^$ )"       # ReFormat. D
     echo "Number of WhiteListVolumes's Line is Odd"          &&
     exit 1
                                                                    # Check2. Number of parameters (in data-part)
+IFS_old=$IFS
+IFS=$'\n'
 j="1"                                                                # Name/Data-line determinant
-echo "$WhiteListVolumes"                                     |
-while read i ;do
+for i in $WhiteListVolumes ;do
     [ $(( j % 2 )) -eq 0 ]                                   &&      # choose Data-line
     [ $(echo "$i" | grep -o ',' | wc -l) -ne "3" ]           &&      # count parameters
     echo "Number of WhiteListVolume's parameter is wrong"    &&
     exit 1
     j=$(( j + 1 ))
-done                                                         ||
-exit 1
-
-# For the cases of special-characters (such as $IFS) in volume-name,
-# make $IFS ="" then join data with $'\001' .
-
-IFS_old=$IFS
-IFS=$'\n'
+done
+IFS=$IFS_old
 
 # Make $WhiteListVolumeParameter from $WhiteListVolumes
 #
@@ -275,6 +270,9 @@ IFS=$'\n'
 #
 #   1st line ($j=1) and Odd line -> Make new record
 #   Even line                    -> Add data to current record with $'\001'
+#
+# remaerk: For the cases of special-characters (such as $IFS) in volume-name,
+# join data with $'\001' .
 #
 #  ex.
 #     $WhiteListVolumes -> $WhiteListVolumeParameter
@@ -285,6 +283,8 @@ IFS=$'\n'
 #       ..                   ..
 #
 
+IFS_old=$IFS
+IFS=$'\n'
 j="1"                                            # Odd/Even line determinant
 for i in $WhiteListVolumes ;do
 
@@ -390,29 +390,33 @@ myCount="1"
 for myCount in {1..10};do                                                                   # Repeated for slow-mounting-volumes loop \\\\
     SendToLog $( echo $myCount ) "/10"
     GetOuterVolumeList
-                                                                                               # Set $IFS to "\n" in "for" control statements
+
     IFS_bak=$IFS
     IFS=$'\n'
-                                                                                            ## Choose one OuterVolume loop start================
-    for myVolume in $ListOfOuterVolumes ;do
+
+    for myVolume in $ListOfOuterVolumes ;do                                                 ## Choose one OuterVolume loop start================
+
       EjectDeterminant="0"                                                                     # Init Determinant : 0 -> Eject/ 1 -> Mount
       GetMyVolumeNameAndData
-                                                                                            ## Choose one WhiteVolumeParameter loop start-------
-      for myWhiteListVolumeParameter in $WhiteListVolumeParameter ;do
+
+      for myWhiteListVolumeParameter in $WhiteListVolumeParameter ;do                       ## Choose one WhiteVolumeParameter loop start-------
+
           MakeMyWhiteVolumeNameAndData
 
           [ "$myVolumeName" = "$myWhiteVolumeName" -o "$myWhiteVolumeName" = "*" ] &&          # Compare Name (Exact-match)
           [ $( echo "$myVolumeData" |grep "$myGrepWhiteVolumeData" ) ]             &&          # Compare Data (grep-match)
-            EjectDeterminant="1" && break                                                      # Change Determinant
-      done
-                                                                                            ## Choose one WhiteVolumeParameter loop end---------
-                                                                                               # Eject volume 
-      [ "$EjectDeterminant" = "0" ]                              &&
+            EjectDeterminant="1"                                                   &&          # Change Determinant
+            break
+
+      done                                                                                  ## Choose one WhiteVolumeParameter loop end---------
+
+      [ "$EjectDeterminant" = "0" ]                              &&                            # Eject volume
         diskutil unmount force $myVolume                         &&
         SendToLog "$myVolumeName($myVolumeData) is Unmounted!"   &&
         EjectVolumes="$EjectVolumes"$'\n'" - $myVolumeName -"
-    done
-                                                                                            ## Choose one OuterVolume loop end=================
+
+    done                                                                                    ## Choose one OuterVolume loop end==================
+
     IFS=$IFS_bak
 done
                                                                                             # Repeated for slow-mounting-volumes loop end \\\\
