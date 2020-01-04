@@ -15,7 +15,7 @@ The White-Volumes can be specified by Protocol(USB, Thunderbolt, PCI-Express, SA
   - osascript (for FinderDialog)
   - perl (for replace Variables)
 
-- Tested under Mojave 10.14.6 (Confrim Dialog/TCC appear at the first run)
+- Tested under Mojave 10.14.6 (Confirm Dialog/TCC appear at the first run)
 
 ## Usage
 Excute ShellScripts with launchctl / launchd.
